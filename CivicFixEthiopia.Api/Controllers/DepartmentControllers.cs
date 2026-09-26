@@ -1,5 +1,6 @@
 using CivicFixEthiopia.Api.Data;
 using CivicFixEthiopia.Api.Models.Entities;
+using CivicFixEthiopia.Api.Models.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,22 +18,43 @@ public class DepartmentsController : ControllerBase
     }
 
     // GET: api/departments
-[HttpGet]
-public async Task<ActionResult<IEnumerable<Department>>> GetDepartments([FromQuery] bool activeOnly = true)
-{
-    var query = _context.Departments.AsQueryable();
-    if (activeOnly)
-        query = query.Where(d => d.IsActive);
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<DepartmentDto>>> GetDepartments([FromQuery] bool activeOnly = true)
+    {
+        var query = _context.Departments.AsQueryable();
+        if (activeOnly)
+            query = query.Where(d => d.IsActive);
 
-    return await query.ToListAsync();
-}
+        return await query.Select(d => new DepartmentDto
+        {
+            Id = d.Id,
+            Name = d.Name,
+            Description = d.Description,
+            ContactPhone = d.ContactPhone,
+            Email = d.Email,
+            IsActive = d.IsActive,
+            CreatedAt = d.CreatedAt
+        }).ToListAsync();
+    }
+
     // POST: api/departments
     [HttpPost]
-    public async Task<ActionResult<Department>> CreateDepartment(Department department)
+    public async Task<ActionResult<DepartmentDto>> CreateDepartment(Department department)
     {
         _context.Departments.Add(department);
         await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetDepartments), new { id = department.Id }, department);
+
+        var dto = new DepartmentDto
+        {
+            Id = department.Id,
+            Name = department.Name,
+            Description = department.Description,
+            ContactPhone = department.ContactPhone,
+            Email = department.Email,
+            IsActive = department.IsActive,
+            CreatedAt = department.CreatedAt
+        };
+        return CreatedAtAction(nameof(GetDepartments), new { id = department.Id }, dto);
     }
 
     // PUT: api/departments/5
