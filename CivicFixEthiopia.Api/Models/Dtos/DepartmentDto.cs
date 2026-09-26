@@ -1,4 +1,4 @@
-namespace CivicFixEthiopia.Api.Models.Dtos;
+namespace CivicFixEthiopia.Api.Models.DTOs;
 
 public class DepartmentDto
 {

@@ -1,5 +1,6 @@
 using CivicFixEthiopia.Api.Data;
 using CivicFixEthiopia.Api.Models.Entities;
+using CivicFixEthiopia.Api.Models.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,24 +17,40 @@ public class CategoriesController : ControllerBase
         _context = context;
     }
 
-    /// GET: api/categories
-[HttpGet]
-public async Task<ActionResult<IEnumerable<Category>>> GetCategories([FromQuery] bool activeOnly = true)
-{
-    var query = _context.Categories.AsQueryable();
-    if (activeOnly)
-        query = query.Where(c => c.IsActive);
+    // GET: api/categories
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<CategoryDto>>> GetCategories([FromQuery] bool activeOnly = true)
+    {
+        var query = _context.Categories.AsQueryable();
+        if (activeOnly)
+            query = query.Where(c => c.IsActive);
 
-    return await query.ToListAsync();
-}
+        return await query.Select(c => new CategoryDto
+        {
+            Id = c.Id,
+            Name = c.Name,
+            Description = c.Description,
+            IsActive = c.IsActive,
+            CreatedAt = c.CreatedAt
+        }).ToListAsync();
+    }
 
     // POST: api/categories
     [HttpPost]
-    public async Task<ActionResult<Category>> CreateCategory(Category category)
+    public async Task<ActionResult<CategoryDto>> CreateCategory(Category category)
     {
         _context.Categories.Add(category);
         await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetCategories), new { id = category.Id }, category);
+
+        var dto = new CategoryDto
+        {
+            Id = category.Id,
+            Name = category.Name,
+            Description = category.Description,
+            IsActive = category.IsActive,
+            CreatedAt = category.CreatedAt
+        };
+        return CreatedAtAction(nameof(GetCategories), new { id = category.Id }, dto);
     }
 
     // PUT: api/categories/5
@@ -48,7 +65,7 @@ public async Task<ActionResult<IEnumerable<Category>>> GetCategories([FromQuery]
         return NoContent();
     }
 
-    // DELETE: api/categories/5  (deactivate, not hard delete — matches your spec)
+    // DELETE: api/categories/5  
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeactivateCategory(int id)
     {
