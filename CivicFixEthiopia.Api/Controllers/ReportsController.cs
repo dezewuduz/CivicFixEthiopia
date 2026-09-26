@@ -3,6 +3,8 @@ using CivicFixEthiopia.Api.Models.Entities;
 using CivicFixEthiopia.Api.Models.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using CivicFixEthiopia.Api.Models.DTOs;
+
 
 namespace CivicFixEthiopia.Api.Controllers;
 
@@ -17,32 +19,69 @@ public class ReportsController : ControllerBase
         _context = context;
     }
 
-    // GET: api/reports
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Report>>> GetReports()
+    /// GET: api/reports
+[HttpGet]
+public async Task<ActionResult<IEnumerable<ReportListDto>>> GetReports()
+{
+    return await _context.Reports
+        .Include(r => r.Category)
+        .Include(r => r.Department)
+        .Select(r => new ReportListDto
+        {
+            Id = r.Id,
+            ReportNumber = r.ReportNumber,
+            Title = r.Title,
+            Status = r.Status,
+            CategoryName = r.Category != null ? r.Category.Name : null,
+            DepartmentName = r.Department != null ? r.Department.Name : null,
+            LocationText = r.LocationText,
+            CreatedAt = r.CreatedAt
+        })
+        .ToListAsync();
+}
+
+// GET: api/reports/5
+[HttpGet("{id}")]
+public async Task<ActionResult<ReportDetailDto>> GetReport(int id)
+{
+    var report = await _context.Reports
+        .Include(r => r.Category)
+        .Include(r => r.Department)
+        .Include(r => r.StatusHistory)
+        .FirstOrDefaultAsync(r => r.Id == id);
+
+    if (report == null)
+        return NotFound();
+
+    var dto = new ReportDetailDto
     {
-        return await _context.Reports
-            .Include(r => r.Category)
-            .Include(r => r.Department)
-            .ToListAsync();
-    }
+        Id = report.Id,
+        ReportNumber = report.ReportNumber,
+        Title = report.Title,
+        Description = report.Description,
+        Status = report.Status,
+        LocationText = report.LocationText,
+        Latitude = report.Latitude,
+        Longitude = report.Longitude,
+        ImageUrl = report.ImageUrl,
+        CreatedAt = report.CreatedAt,
+        UpdatedAt = report.UpdatedAt,
+        Category = report.Category != null ? new CategorySummaryDto { Id = report.Category.Id, Name = report.Category.Name } : null,
+        Department = report.Department != null ? new DepartmentSummaryDto { Id = report.Department.Id, Name = report.Department.Name } : null,
+        StatusHistory = report.StatusHistory
+            .OrderBy(h => h.ChangedAt)
+            .Select(h => new StatusHistoryDto
+            {
+                OldStatus = h.OldStatus,
+                NewStatus = h.NewStatus,
+                Comment = h.Comment,
+                ChangedByUserId = h.ChangedByUserId,
+                ChangedAt = h.ChangedAt
+            }).ToList()
+    };
 
-    // GET: api/reports/5
-    [HttpGet("{id}")]
-    public async Task<ActionResult<Report>> GetReport(int id)
-    {
-        var report = await _context.Reports
-            .Include(r => r.Category)
-            .Include(r => r.Department)
-            .Include(r => r.StatusHistory)
-            .FirstOrDefaultAsync(r => r.Id == id);
-
-        if (report == null)
-            return NotFound();
-
-        return report;
-    }
-
+    return dto;
+}
   // POST: api/reports
 [HttpPost]
 public async Task<ActionResult<Report>> CreateReport(CreateReportRequest request)
