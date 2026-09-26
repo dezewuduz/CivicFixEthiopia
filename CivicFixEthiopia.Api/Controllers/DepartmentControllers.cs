@@ -1,0 +1,59 @@
+using CivicFixEthiopia.Api.Data;
+using CivicFixEthiopia.Api.Models.Entities;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace CivicFixEthiopia.Api.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class DepartmentsController : ControllerBase
+{
+    private readonly ApplicationDbContext _context;
+
+    public DepartmentsController(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    // GET: api/departments
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<Department>>> GetDepartments()
+    {
+        return await _context.Departments.ToListAsync();
+    }
+
+    // POST: api/departments
+    [HttpPost]
+    public async Task<ActionResult<Department>> CreateDepartment(Department department)
+    {
+        _context.Departments.Add(department);
+        await _context.SaveChangesAsync();
+        return CreatedAtAction(nameof(GetDepartments), new { id = department.Id }, department);
+    }
+
+    // PUT: api/departments/5
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateDepartment(int id, Department department)
+    {
+        if (id != department.Id)
+            return BadRequest();
+
+        _context.Entry(department).State = EntityState.Modified;
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    // DELETE: api/departments/5 (deactivate, matches spec)
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeactivateDepartment(int id)
+    {
+        var department = await _context.Departments.FindAsync(id);
+        if (department == null)
+            return NotFound();
+
+        department.IsActive = false;
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+}
