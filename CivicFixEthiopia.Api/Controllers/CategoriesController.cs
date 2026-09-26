@@ -16,12 +16,16 @@ public class CategoriesController : ControllerBase
         _context = context;
     }
 
-    // GET: api/categories
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Category>>> GetCategories()
-    {
-        return await _context.Categories.ToListAsync();
-    }
+    /// GET: api/categories
+[HttpGet]
+public async Task<ActionResult<IEnumerable<Category>>> GetCategories([FromQuery] bool activeOnly = true)
+{
+    var query = _context.Categories.AsQueryable();
+    if (activeOnly)
+        query = query.Where(c => c.IsActive);
+
+    return await query.ToListAsync();
+}
 
     // POST: api/categories
     [HttpPost]

@@ -17,12 +17,15 @@ public class DepartmentsController : ControllerBase
     }
 
     // GET: api/departments
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Department>>> GetDepartments()
-    {
-        return await _context.Departments.ToListAsync();
-    }
+[HttpGet]
+public async Task<ActionResult<IEnumerable<Department>>> GetDepartments([FromQuery] bool activeOnly = true)
+{
+    var query = _context.Departments.AsQueryable();
+    if (activeOnly)
+        query = query.Where(d => d.IsActive);
 
+    return await query.ToListAsync();
+}
     // POST: api/departments
     [HttpPost]
     public async Task<ActionResult<Department>> CreateDepartment(Department department)
