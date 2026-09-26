@@ -43,20 +43,31 @@ public class ReportsController : ControllerBase
         return report;
     }
 
-    // POST: api/reports
-    [HttpPost]
-    public async Task<ActionResult<Report>> CreateReport(Report report)
+  // POST: api/reports
+[HttpPost]
+public async Task<ActionResult<Report>> CreateReport(CreateReportRequest request)
+{
+    var report = new Report
     {
-        report.Status = ReportStatus.Submitted;
-        report.CreatedAt = DateTime.UtcNow;
-        report.UpdatedAt = DateTime.UtcNow;
+        ReportNumber = $"CF-{DateTime.UtcNow.Year}-{Guid.NewGuid().ToString()[..8].ToUpper()}",
+        Title = request.Title,
+        Description = request.Description,
+        CategoryId = request.CategoryId,
+        CitizenId = request.CitizenId,
+        LocationText = request.LocationText,
+        Latitude = request.Latitude,
+        Longitude = request.Longitude,
+        ImageUrl = request.ImageUrl,
+        Status = ReportStatus.Submitted,
+        CreatedAt = DateTime.UtcNow,
+        UpdatedAt = DateTime.UtcNow
+    };
 
-        _context.Reports.Add(report);
-        await _context.SaveChangesAsync();
+    _context.Reports.Add(report);
+    await _context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetReport), new { id = report.Id }, report);
-    }
-
+    return CreatedAtAction(nameof(GetReport), new { id = report.Id }, report);
+}
     // PUT: api/reports/5/verify
     [HttpPut("{id}/verify")]
     public async Task<IActionResult> VerifyReport(int id, [FromBody] VerifyRequest request)
@@ -155,4 +166,15 @@ public class StatusUpdateRequest
     public ReportStatus NewStatus { get; set; }
     public string? Comment { get; set; }
     public int ChangedByUserId { get; set; }
+}
+public class CreateReportRequest
+{
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public int CategoryId { get; set; }
+    public int CitizenId { get; set; }
+    public string? LocationText { get; set; }
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
+    public string? ImageUrl { get; set; }
 }

@@ -8,8 +8,11 @@ var builder = WebApplication.CreateBuilder(args);   // must be first — everyth
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 // --- Controllers (this is what makes AuthController, ReportsController, etc. actually work) ---
-builder.Services.AddControllers();
-
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 // --- OpenAPI (kept from the template; we'll swap this for full Swagger UI in a later step) ---
 builder.Services.AddOpenApi();
 
