@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="CivicFixEthiopia.Api/CivicFixEthiopia.Api.csproj" />
+  <Project Path="CivicFixEthiopia.Application/CivicFixEthiopia.Application.csproj" />
+  <Project Path="CivicFixEthiopia.Domain/CivicFixEthiopia.Domain.csproj" />
+  <Project Path="CivicFixEthiopia.Infrastructure/CivicFixEthiopia.Infrastructure.csproj" />
+</Solution>
