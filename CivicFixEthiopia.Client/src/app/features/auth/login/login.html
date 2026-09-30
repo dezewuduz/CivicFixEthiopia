@@ -1,0 +1,44 @@
+<div class="login-container">
+  <div class="login-card">
+    <h1>CivicFix Ethiopia</h1>
+    <p class="subtitle">Sign in to report and track civic issues</p>
+
+    @if (errorMessage()) {
+      <div class="error-banner">{{ errorMessage() }}</div>
+    }
+
+    <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+      <label for="email">Email</label>
+      <input
+        id="email"
+        type="email"
+        name="email"
+        [(ngModel)]="email"
+        required
+        placeholder="you@example.com"
+      />
+
+      <label for="password">Password</label>
+      <input
+        id="password"
+        type="password"
+        name="password"
+        [(ngModel)]="password"
+        required
+        placeholder="Your password"
+      />
+
+      <button type="submit" [disabled]="loginForm.invalid || isLoading()">
+        @if (isLoading()) {
+          Signing in...
+        } @else {
+          Sign In
+        }
+      </button>
+    </form>
+
+    <p class="register-link">
+      Don't have an account? <a routerLink="/register">Register here</a>
+    </p>
+  </div>
+</div>

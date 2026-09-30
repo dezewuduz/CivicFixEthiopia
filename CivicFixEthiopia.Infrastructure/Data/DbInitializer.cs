@@ -41,8 +41,8 @@ public static class DbInitializer
             db.Users.Add(new User
             {
                 FullName = "System Administrator",
-                Email = "demisezewudud43@gmail.com",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Best2053"),
+                Email = "admin@civicfix.et",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
                 Role = UserRole.Administrator,
                 IsActive = true
             });
