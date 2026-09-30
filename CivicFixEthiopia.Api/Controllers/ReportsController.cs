@@ -1,10 +1,11 @@
-using CivicFixEthiopia.Api.Data;
-using CivicFixEthiopia.Api.Models.Entities;
-using CivicFixEthiopia.Api.Models.Enums;
+using CivicFixEthiopia.Domain.Entities;
+using CivicFixEthiopia.Infrastructure.Data;
+using CivicFixEthiopia.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using CivicFixEthiopia.Api.Models.DTOs;
-
+using CivicFixEthiopia.Application.DTOs;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace CivicFixEthiopia.Api.Controllers;
 
@@ -84,15 +85,21 @@ public async Task<ActionResult<ReportDetailDto>> GetReport(int id)
 }
   // POST: api/reports
 [HttpPost]
+[Authorize] 
 public async Task<ActionResult<Report>> CreateReport(CreateReportRequest request)
 {
+    // citizenId ከ request body ሳይሆን ከ JWT token ራሱ ይወሰዳል
+    var citizenIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (citizenIdClaim == null || !int.TryParse(citizenIdClaim, out var citizenId))
+        return Unauthorized();
+
     var report = new Report
     {
         ReportNumber = $"CF-{DateTime.UtcNow.Year}-{Guid.NewGuid().ToString()[..8].ToUpper()}",
         Title = request.Title,
         Description = request.Description,
         CategoryId = request.CategoryId,
-        CitizenId = request.CitizenId,
+        CitizenId = citizenId, 
         LocationText = request.LocationText,
         Latitude = request.Latitude,
         Longitude = request.Longitude,
@@ -105,11 +112,23 @@ public async Task<ActionResult<Report>> CreateReport(CreateReportRequest request
     _context.Reports.Add(report);
     await _context.SaveChangesAsync();
 
+    _context.ReportStatusHistories.Add(new ReportStatusHistory
+    {
+        ReportId = report.Id,
+        OldStatus = ReportStatus.Submitted,
+        NewStatus = ReportStatus.Submitted,
+        Comment = "Report submitted by citizen.",
+        ChangedByUserId = citizenId,
+        ChangedAt = DateTime.UtcNow
+    });
+    await _context.SaveChangesAsync();
+
     return CreatedAtAction(nameof(GetReport), new { id = report.Id }, report);
 }
     // PUT: api/reports/5/verify
     [HttpPut("{id}/verify")]
-    public async Task<IActionResult> VerifyReport(int id, [FromBody] VerifyRequest request)
+    [Authorize(Roles = "Administrator")]
+        public async Task<IActionResult> VerifyReport(int id, [FromBody] VerifyRequest request)
     {
         var report = await _context.Reports.FindAsync(id);
         if (report == null)
@@ -135,6 +154,7 @@ public async Task<ActionResult<Report>> CreateReport(CreateReportRequest request
 
     // PUT: api/reports/5/assign
     [HttpPut("{id}/assign")]
+    [Authorize(Roles = "Administrator")]
     public async Task<IActionResult> AssignDepartment(int id, [FromBody] AssignRequest request)
     {
         var report = await _context.Reports.FindAsync(id);
@@ -160,33 +180,49 @@ public async Task<ActionResult<Report>> CreateReport(CreateReportRequest request
     }
 
     // PUT: api/reports/5/status
-    [HttpPut("{id}/status")]
-    public async Task<IActionResult> UpdateStatus(int id, [FromBody] StatusUpdateRequest request)
+[HttpPut("{id}/status")]
+[Authorize(Roles = "Administrator,DepartmentOfficer")]
+public async Task<IActionResult> UpdateStatus(int id, [FromBody] StatusUpdateRequest request)
+{
+    var report = await _context.Reports.FindAsync(id);
+    if (report == null)
+        return NotFound();
+
+    // የተፈቀዱ transitions ብቻ - እያንዳንዱ status ወደ የትኞቹ ቀጣይ statuses መሄድ እንደሚችል
+    var allowedTransitions = new Dictionary<ReportStatus, ReportStatus[]>
     {
-        var report = await _context.Reports.FindAsync(id);
-        if (report == null)
-            return NotFound();
+        [ReportStatus.Assigned] = new[] { ReportStatus.InProgress },
+        [ReportStatus.InProgress] = new[] { ReportStatus.Resolved }
+    };
 
-        var oldStatus = report.Status;
-        report.Status = request.NewStatus;
-        report.UpdatedAt = DateTime.UtcNow;
-
-        _context.ReportStatusHistories.Add(new ReportStatusHistory
+    if (!allowedTransitions.TryGetValue(report.Status, out var allowedNext) ||
+        !allowedNext.Contains(request.NewStatus))
+    {
+        return BadRequest(new
         {
-            ReportId = report.Id,
-            OldStatus = oldStatus,
-            NewStatus = request.NewStatus,
-            Comment = request.Comment,
-            ChangedByUserId = request.ChangedByUserId,
-            ChangedAt = DateTime.UtcNow
+            message = $"Cannot change status from {report.Status} to {request.NewStatus}."
         });
-
-        await _context.SaveChangesAsync();
-        return NoContent();
     }
+
+    var oldStatus = report.Status;
+    report.Status = request.NewStatus;
+    report.UpdatedAt = DateTime.UtcNow;
+
+    _context.ReportStatusHistories.Add(new ReportStatusHistory
+    {
+        ReportId = report.Id,
+        OldStatus = oldStatus,
+        NewStatus = request.NewStatus,
+        Comment = request.Comment,
+        ChangedByUserId = request.ChangedByUserId,
+        ChangedAt = DateTime.UtcNow
+    });
+
+    await _context.SaveChangesAsync();
+    return NoContent();
+}
 }
 
-// Small request DTOs — keep these in the same file for now, or move to Models/DTOs later
 public class VerifyRequest
 {
     public bool Approved { get; set; }

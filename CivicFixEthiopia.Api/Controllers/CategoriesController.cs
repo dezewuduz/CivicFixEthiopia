@@ -1,8 +1,9 @@
-using CivicFixEthiopia.Api.Data;
-using CivicFixEthiopia.Api.Models.Entities;
-using CivicFixEthiopia.Api.Models.DTOs;
+using CivicFixEthiopia.Domain.Entities;
+using CivicFixEthiopia.Application.DTOs;
+using CivicFixEthiopia.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CivicFixEthiopia.Api.Controllers;
 
@@ -17,7 +18,6 @@ public class CategoriesController : ControllerBase
         _context = context;
     }
 
-    // GET: api/categories
     [HttpGet]
     public async Task<ActionResult<IEnumerable<CategoryDto>>> GetCategories([FromQuery] bool activeOnly = true)
     {
@@ -35,8 +35,8 @@ public class CategoriesController : ControllerBase
         }).ToListAsync();
     }
 
-    // POST: api/categories
     [HttpPost]
+    [Authorize(Roles = "Administrator")]
     public async Task<ActionResult<CategoryDto>> CreateCategory(Category category)
     {
         _context.Categories.Add(category);
@@ -53,8 +53,8 @@ public class CategoriesController : ControllerBase
         return CreatedAtAction(nameof(GetCategories), new { id = category.Id }, dto);
     }
 
-    // PUT: api/categories/5
     [HttpPut("{id}")]
+    [Authorize(Roles = "Administrator")]
     public async Task<IActionResult> UpdateCategory(int id, Category category)
     {
         if (id != category.Id)
@@ -65,8 +65,8 @@ public class CategoriesController : ControllerBase
         return NoContent();
     }
 
-    // DELETE: api/categories/5  
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Administrator")]
     public async Task<IActionResult> DeactivateCategory(int id)
     {
         var category = await _context.Categories.FindAsync(id);

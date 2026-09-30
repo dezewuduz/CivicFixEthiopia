@@ -1,8 +1,12 @@
-using CivicFixEthiopia.Api.Data;
-using CivicFixEthiopia.Api.Models.Entities;
-using CivicFixEthiopia.Api.Models.Enums;
+using CivicFixEthiopia.Infrastructure.Data;
+using CivicFixEthiopia.Domain.Entities;
+using CivicFixEthiopia.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace CivicFixEthiopia.Api.Controllers;
 
@@ -11,10 +15,12 @@ namespace CivicFixEthiopia.Api.Controllers;
 public class UsersController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
+    private readonly IConfiguration _config;
 
-    public UsersController(ApplicationDbContext context)
+    public UsersController(ApplicationDbContext context, IConfiguration config)
     {
         _context = context;
+        _config = config;
     }
 
     // POST: api/users/register
@@ -56,8 +62,11 @@ public class UsersController : ControllerBase
         if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             return Unauthorized("Invalid email or password.");
 
+        var token = GenerateJwtToken(user);
+
         return Ok(new
         {
+            token,
             user.Id,
             user.FullName,
             user.Email,
@@ -80,6 +89,31 @@ public class UsersController : ControllerBase
             user.Email,
             user.Role
         });
+    }
+
+    private string GenerateJwtToken(User user)
+    {
+        var jwtSettings = _config.GetSection("Jwt");
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!));
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Name, user.FullName),
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.Role, user.Role.ToString())
+        };
+
+        var token = new JwtSecurityToken(
+            issuer: jwtSettings["Issuer"],
+            audience: jwtSettings["Audience"],
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(double.Parse(jwtSettings["ExpiryMinutes"]!)),
+            signingCredentials: credentials
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }
 

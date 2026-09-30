@@ -1,6 +1,7 @@
-using CivicFixEthiopia.Api.Data;
-using CivicFixEthiopia.Api.Models.Entities;
-using CivicFixEthiopia.Api.Models.DTOs;
+using CivicFixEthiopia.Infrastructure.Data;
+using CivicFixEthiopia.Domain.Entities;
+using CivicFixEthiopia.Application.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -39,6 +40,7 @@ public class DepartmentsController : ControllerBase
 
     // POST: api/departments
     [HttpPost]
+    [Authorize(Roles = "Administrator")]
     public async Task<ActionResult<DepartmentDto>> CreateDepartment(Department department)
     {
         _context.Departments.Add(department);
@@ -59,6 +61,7 @@ public class DepartmentsController : ControllerBase
 
     // PUT: api/departments/5
     [HttpPut("{id}")]
+    [Authorize(Roles = "Administrator")]
     public async Task<IActionResult> UpdateDepartment(int id, Department department)
     {
         if (id != department.Id)
@@ -71,6 +74,7 @@ public class DepartmentsController : ControllerBase
 
     // DELETE: api/departments/5 (deactivate, matches spec)
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Administrator")]
     public async Task<IActionResult> DeactivateDepartment(int id)
     {
         var department = await _context.Departments.FindAsync(id);
