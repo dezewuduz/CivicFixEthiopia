@@ -1,0 +1,5 @@
+<div style="padding:2rem">
+    <h1> Welcome, {{authService.currentUser()?.fullName}}</h1>
+    <p>Role:{{authService.currentUser()?.role}}</p>
+    <button (click)="authService.logout()"> Logout</button>
+</div> 
