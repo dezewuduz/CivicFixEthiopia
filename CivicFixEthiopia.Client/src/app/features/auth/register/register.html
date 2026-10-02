@@ -1,0 +1,67 @@
+<div class="register-container">
+  <div class="register-card">
+    <h1>Create an Account</h1>
+    <p class="subtitle">Join CivicFix Ethiopia to report civic issues</p>
+
+    @if (errorMessage()) {
+      <div class="error-banner">{{ errorMessage() }}</div>
+    }
+    @if (successMessage()) {
+      <div class="success-banner">{{ successMessage() }}</div>
+    }
+
+    <form (ngSubmit)="onSubmit()" #registerForm="ngForm">
+      <label for="fullName">Full Name</label>
+      <input
+        id="fullName"
+        type="text"
+        name="fullName"
+        [(ngModel)]="fullName"
+        required
+        placeholder="Your full name"
+      />
+
+      <label for="email">Email</label>
+      <input
+        id="email"
+        type="email"
+        name="email"
+        [(ngModel)]="email"
+        required
+        placeholder="you@example.com"
+      />
+
+      <label for="phoneNumber">Phone Number (optional)</label>
+      <input
+        id="phoneNumber"
+        type="tel"
+        name="phoneNumber"
+        [(ngModel)]="phoneNumber"
+        placeholder="09xxxxxxxx"
+      />
+
+      <label for="password">Password</label>
+      <input
+        id="password"
+        type="password"
+        name="password"
+        [(ngModel)]="password"
+        required
+        minlength="6"
+        placeholder="At least 6 characters"
+      />
+
+      <button type="submit" [disabled]="registerForm.invalid || isLoading()">
+        @if (isLoading()) {
+          Creating account...
+        } @else {
+          Register
+        }
+      </button>
+    </form>
+
+    <p class="login-link">
+      Already have an account? <a routerLink="/login">Sign in here</a>
+    </p>
+  </div>
+</div>

@@ -1,0 +1,90 @@
+<div class="admin-container">
+  <header class="admin-header">
+    <div>
+      <h1>Admin Dashboard</h1>
+      <p class="subtitle">Overview of city service reports</p>
+    </div>
+    <button class="logout-btn" (click)="authService.logout()">Logout</button>
+  </header>
+
+  @if (actionMessage()) {
+    <div class="success-banner">{{ actionMessage() }}</div>
+  }
+  @if (errorMessage()) {
+    <div class="error-banner">{{ errorMessage() }}</div>
+  }
+
+  @if (isLoading()) {
+    <p class="loading">Loading reports...</p>
+  } @else {
+    <div class="cards-grid">
+      <div class="card">
+        <span class="card-label">Total Reports</span>
+        <span class="card-value">{{ totalCount() }}</span>
+      </div>
+      <div class="card card-pending">
+        <span class="card-label">Pending</span>
+        <span class="card-value">{{ pendingCount() }}</span>
+      </div>
+      <div class="card card-progress">
+        <span class="card-label">In Progress</span>
+        <span class="card-value">{{ inProgressCount() }}</span>
+      </div>
+      <div class="card card-resolved">
+        <span class="card-label">Resolved</span>
+        <span class="card-value">{{ resolvedCount() }}</span>
+      </div>
+    </div>
+
+    <section class="reports-section">
+      <h2>All Reports</h2>
+      @if (reports().length === 0) {
+        <p class="empty-state">No reports yet.</p>
+      } @else {
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Location</th>
+              <th>Status</th>
+              <th>Department</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (report of reports(); track report.id) {
+              <tr>
+                <td>{{ report.reportNumber }}</td>
+                <td>{{ report.title }}</td>
+                <td>{{ report.categoryName }}</td>
+                <td>{{ report.locationText }}</td>
+                <td><span class="badge" [ngClass]="statusClass(report.status)">{{ statusLabel(report.status) }}</span></td>
+                <td>{{ report.departmentName || '-' }}</td>
+                <td class="action-cell">
+                  @if (report.status === ReportStatus.Submitted) {
+                    <button class="btn-approve" (click)="verify(report.id, true)">Verify</button>
+                    <button class="btn-reject" (click)="verify(report.id, false)">Reject</button>
+                  }
+                  @if (report.status === ReportStatus.Verified) {
+                    <select (change)="onDepartmentSelect(report.id, $event)">
+                      <option value="">Select department</option>
+                      @for (dept of departments(); track dept.id) {
+                        <option [value]="dept.id">{{ dept.name }}</option>
+                      }
+                    </select>
+                    <button class="btn-assign" (click)="assign(report.id)">Assign</button>
+                  }
+                  @if (report.status !== ReportStatus.Submitted && report.status !== ReportStatus.Verified) {
+                    <span class="no-action">—</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+  }
+</div>

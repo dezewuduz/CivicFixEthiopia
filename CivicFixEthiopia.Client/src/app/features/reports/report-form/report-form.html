@@ -1,0 +1,84 @@
+<div class="form-container">
+  <div class="form-card">
+    <h1>Report an Issue</h1>
+    <p class="subtitle">Fill in the details about the problem</p>
+
+    @if (errorMessage()) {
+      <div class="error-banner">{{ errorMessage() }}</div>
+    }
+
+    <form (ngSubmit)="onSubmit()" #reportForm="ngForm">
+      <label>Issue Category *</label>
+      <div class="category-grid">
+        @for (cat of categories(); track cat.id) {
+          <button
+            type="button"
+            class="category-btn"
+            [class.selected]="selectedCategoryId === cat.id"
+            (click)="selectCategory(cat.id)"
+          >
+            {{ cat.name }}
+          </button>
+        }
+      </div>
+
+      <label for="title">Title *</label>
+      <input
+        id="title"
+        name="title"
+        type="text"
+        [(ngModel)]="title"
+        required
+        placeholder="e.g. Broken streetlight in front of the school"
+      />
+
+      <label for="description">Description *</label>
+      <textarea
+        id="description"
+        name="description"
+        [(ngModel)]="description"
+        required
+        rows="4"
+        placeholder="Describe the problem in detail..."
+      ></textarea>
+
+      <label for="location">Location</label>
+      <input
+        id="location"
+        name="location"
+        type="text"
+        [(ngModel)]="locationText"
+        placeholder="e.g. Bole, Addis Ababa"
+      />
+ <label>Photo (optional)</label>
+@if (previewUrl()) {
+  <div class="photo-preview">
+    <img [src]="previewUrl()" alt="Preview" />
+    <button type="button" class="remove-photo-btn" (click)="removeImage()">✕ Remove</button>
+  </div>
+} @else {
+  <label for="photo" class="upload-box">
+    <span>📷 Click to upload photo</span>
+    <span class="upload-hint">(JPG, PNG, max 5MB)</span>
+  </label>
+  <input
+    id="photo"
+    type="file"
+    accept="image/jpeg,image/png"
+    (change)="onFileSelected($event)"
+    style="display: none"
+  />
+}
+      <div class="form-actions">
+        <a routerLink="/dashboard" class="cancel-btn">Cancel</a>
+        <button type="submit" class="submit-btn" [disabled]="reportForm.invalid || !selectedCategoryId || isLoading()">
+          @if (isLoading()) {
+            Submitting...
+          } @else {
+            Submit Report
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

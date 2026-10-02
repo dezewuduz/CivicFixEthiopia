@@ -1,0 +1,82 @@
+<div class="detail-container">
+  @if (isLoading()) {
+    <p class="loading">Loading report...</p>
+  } @else if (errorMessage()) {
+    <p class="error-banner">{{ errorMessage() }}</p>
+  } @else if (report(); as r) {
+    <div class="detail-card">
+      <div class="detail-header">
+        <div>
+          <span class="report-number">Report #{{ r.reportNumber }}</span>
+          <h1>{{ r.title }}</h1>
+        </div>
+        <span class="status-pill" [class.rejected]="r.status === ReportStatus.Rejected">
+          {{ statusLabel(r.status) }}
+        </span>
+      </div>
+
+      @if (r.imageUrl) {
+        <img [src]="'http://localhost:5075' + r.imageUrl" class="report-image" alt="Report photo" />
+      }
+
+      <p class="description">{{ r.description }}</p>
+
+      <div class="meta-grid">
+        <div>
+          <span class="meta-label">Location</span>
+          <span class="meta-value">{{ r.locationText || 'Not specified' }}</span>
+        </div>
+        <div>
+          <span class="meta-label">Category</span>
+          <span class="meta-value">{{ r.category?.name }}</span>
+        </div>
+        <div>
+          <span class="meta-label">Submitted</span>
+          <span class="meta-value">{{ r.createdAt | date: 'MMM d, y, h:mm a' }}</span>
+        </div>
+        @if (r.department) {
+          <div>
+            <span class="meta-label">Assigned Department</span>
+            <span class="meta-value">{{ r.department.name }}</span>
+          </div>
+        }
+      </div>
+
+      <h2 class="timeline-title">Report Progress</h2>
+
+      @if (r.status === ReportStatus.Rejected) {
+        <div class="rejected-banner">
+          This report was rejected.
+          @if (r.statusHistory[0]?.comment) {
+            <p class="rejected-comment">{{ r.statusHistory[0].comment }}</p>
+          }
+        </div>
+      } @else {
+        <div class="timeline">
+          @for (step of timelineSteps; track step) {
+            <div class="timeline-step" [class.done]="isStepDone(step)" [class.active]="isStepActive(step)">
+              <div class="timeline-dot">
+                @if (isStepDone(step)) {
+                  <span>✓</span>
+                }
+              </div>
+              <div class="timeline-content">
+                <span class="timeline-label">{{ statusLabel(step) }}</span>
+                @if (historyForStep(step); as h) {
+                  <span class="timeline-date">{{ h.changedAt | date: 'MMM d, y, h:mm a' }}</span>
+                  @if (h.comment) {
+                    <p class="timeline-comment">{{ h.comment }}</p>
+                  }
+                } @else if (!isStepDone(step)) {
+                  <span class="timeline-pending">Waiting...</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <a routerLink="/dashboard" class="back-link">← Back to Dashboard</a>
+    </div>
+  }
+</div>

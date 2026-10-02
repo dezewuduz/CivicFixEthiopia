@@ -1,5 +1,68 @@
-<div style="padding:2rem">
-    <h1> Welcome, {{authService.currentUser()?.fullName}}</h1>
-    <p>Role:{{authService.currentUser()?.role}}</p>
-    <button (click)="authService.logout()"> Logout</button>
-</div> 
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <div>
+      <h1>Welcome, {{ authService.currentUser()?.fullName }}!</h1>
+      <p class="subtitle">Together for a better Addis Ababa</p>
+    </div>
+    <button class="logout-btn" (click)="authService.logout()">Logout</button>
+  </header>
+
+  @if (isLoading()) {
+    <p class="loading">Loading your dashboard...</p>
+  } @else if (errorMessage()) {
+    <p class="error-banner">{{ errorMessage() }}</p>
+  } @else {
+    <div class="cards-grid">
+      <div class="card">
+        <span class="card-label">Total Reports</span>
+        <span class="card-value">{{ totalCount() }}</span>
+      </div>
+      <div class="card card-pending">
+        <span class="card-label">Pending</span>
+        <span class="card-value">{{ pendingCount() }}</span>
+      </div>
+      <div class="card card-progress">
+        <span class="card-label">In Progress</span>
+        <span class="card-value">{{ inProgressCount() }}</span>
+      </div>
+      <div class="card card-resolved">
+        <span class="card-label">Resolved</span>
+        <span class="card-value">{{ resolvedCount() }}</span>
+      </div>
+    </div>
+
+    <a routerLink="/reports/new" class="new-report-btn">+ Report an Issue</a>
+
+    <section class="recent-reports">
+      <h2>Recent Reports</h2>
+      @if (recentReports().length === 0) {
+        <p class="empty-state">You haven't submitted any reports yet.</p>
+      } @else {
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Location</th>
+              <th>Status</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (report of recentReports(); track report.id) {
+                <tr [routerLink]="['/reports', report.id]" class="clickable-row">
+                <td>{{ report.reportNumber }}</td>
+                <td>{{ report.title }}</td>
+                <td>{{ report.categoryName }}</td>
+                <td>{{ report.locationText }}</td>
+                <td><span class="badge" [ngClass]="statusClass(report.status)">{{ statusLabel(report.status) }}</span></td>
+                <td>{{ report.createdAt | date: 'yyyy-MM-dd' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+  }
+</div>

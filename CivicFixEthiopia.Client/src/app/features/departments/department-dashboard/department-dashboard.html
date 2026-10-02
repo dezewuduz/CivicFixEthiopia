@@ -1,0 +1,56 @@
+<div class="dashboard-container">
+  <header>
+    <h1>Department Dashboard</h1>
+    <div class="header-right">
+      <span>{{ authService.currentUser()?.fullName }}</span>
+      <button class="logout-btn" (click)="authService.logout()">Logout</button>
+    </div>
+  </header>
+
+  @if (errorMessage()) {
+    <div class="error-banner">{{ errorMessage() }}</div>
+  }
+
+  @if (isLoading()) {
+    <p class="loading">Loading reports...</p>
+  } @else if (reports().length === 0) {
+    <p class="empty-state">No reports assigned to your department yet.</p>
+  } @else {
+    <div class="report-list">
+      @for (report of reports(); track report.id) {
+        <div class="report-card">
+          <div class="report-info">
+            <span class="report-number">{{ report.reportNumber }}</span>
+            <h3>{{ report.title }}</h3>
+            <p class="meta">{{ report.categoryName }} · {{ report.locationText }}</p>
+            <span class="status-badge status-{{ report.status }}">{{ statusLabel(report.status) }}</span>
+          </div>
+
+          <div class="report-actions">
+            <a [routerLink]="['/reports', report.id]" class="view-link">View Details</a>
+
+            @if (report.status === ReportStatus.Assigned) {
+              <button
+                class="action-btn start-btn"
+                [disabled]="updatingId() === report.id"
+                (click)="startWork(report)"
+              >
+                @if (updatingId() === report.id) { Updating... } @else { Start Work }
+              </button>
+            }
+
+            @if (report.status === ReportStatus.InProgress) {
+              <button
+                class="action-btn resolve-btn"
+                [disabled]="updatingId() === report.id"
+                (click)="markResolved(report)"
+              >
+                @if (updatingId() === report.id) { Updating... } @else { Mark Resolved }
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
