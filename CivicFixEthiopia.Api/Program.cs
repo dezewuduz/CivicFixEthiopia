@@ -69,10 +69,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseCors("AllowAngularApp");
 app.UseAuthentication();   // must checks "who are you?"
 app.UseAuthorization();    // checks "are you allowed to do this?"
-
 app.MapControllers();   
 
 app.Run();

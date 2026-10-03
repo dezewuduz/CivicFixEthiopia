@@ -1,0 +1,81 @@
+<div class="manage-container">
+  <header>
+    <div>
+      <h1>Manage Departments</h1>
+      <p class="subtitle">Add, edit, or deactivate city departments</p>
+    </div>
+    <a routerLink="/admin" class="back-link">← Back to Admin Dashboard</a>
+  </header>
+
+  @if (successMessage()) {
+    <div class="success-banner">{{ successMessage() }}</div>
+  }
+  @if (errorMessage()) {
+    <div class="error-banner">{{ errorMessage() }}</div>
+  }
+
+  @if (!showForm()) {
+    <button class="add-btn" (click)="openCreateForm()">+ Add Department</button>
+  }
+
+  @if (showForm()) {
+    <div class="form-card">
+      <h2>{{ editingId() ? 'Edit Department' : 'New Department' }}</h2>
+
+      <label>Name *</label>
+      <input type="text" [(ngModel)]="formName" placeholder="e.g. Road and Infrastructure Department" />
+
+      <label>Description</label>
+      <textarea [(ngModel)]="formDescription" placeholder="What this department handles"></textarea>
+
+      <label>Contact Phone</label>
+      <input type="text" [(ngModel)]="formContactPhone" placeholder="09xxxxxxxx" />
+
+      <label>Email</label>
+      <input type="email" [(ngModel)]="formEmail" placeholder="department@civicfix.et" />
+
+      <div class="form-actions">
+        <button class="cancel-btn" (click)="cancelForm()">Cancel</button>
+        <button class="save-btn" [disabled]="!formName" (click)="saveDepartment()">
+          {{ editingId() ? 'Save Changes' : 'Create Department' }}
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (isLoading()) {
+    <p class="loading">Loading departments...</p>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Description</th>
+          <th>Contact</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (dept of departments(); track dept.id) {
+          <tr [class.inactive-row]="!dept.isActive">
+            <td>{{ dept.name }}</td>
+            <td>{{ dept.description || '—' }}</td>
+            <td>{{ dept.contactPhone || dept.email || '—' }}</td>
+            <td>
+              <span class="status-badge" [class.active]="dept.isActive" [class.inactive]="!dept.isActive">
+                {{ dept.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+            <td class="actions-cell">
+              <button class="edit-btn" (click)="openEditForm(dept)">Edit</button>
+              @if (dept.isActive) {
+                <button class="deactivate-btn" (click)="deactivate(dept)">Deactivate</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

@@ -22,11 +22,36 @@ public class ReportsController : ControllerBase
 
     /// GET: api/reports
 [HttpGet]
+[Authorize]
 public async Task<ActionResult<IEnumerable<ReportListDto>>> GetReports()
 {
-    return await _context.Reports
+    var role = User.FindFirstValue(ClaimTypes.Role);
+    var query = _context.Reports
         .Include(r => r.Category)
         .Include(r => r.Department)
+        .AsQueryable();
+
+    if (role == "Citizen")
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        query = query.Where(r => r.CitizenId == userId);
+    }
+    else if (role == "DepartmentOfficer")
+    {
+        var deptClaim = User.FindFirst("departmentId")?.Value;
+        if (deptClaim != null)
+        {
+            var deptId = int.Parse(deptClaim);
+            query = query.Where(r => r.DepartmentId == deptId);
+        }
+        else
+        {
+            query = query.Where(r => false); // department ያልተመደበለት officer ምንም አያይም
+        }
+    }
+    // Administrar without filtering you will see
+
+    return await query
         .Select(r => new ReportListDto
         {
             Id = r.Id,
@@ -40,7 +65,6 @@ public async Task<ActionResult<IEnumerable<ReportListDto>>> GetReports()
         })
         .ToListAsync();
 }
-
 // GET: api/reports/5
 [HttpGet("{id}")]
 public async Task<ActionResult<ReportDetailDto>> GetReport(int id)

@@ -70,7 +70,8 @@ public class UsersController : ControllerBase
             user.Id,
             user.FullName,
             user.Email,
-            user.Role
+            user.Role,
+            user.DepartmentId
         });
     }
 
@@ -87,7 +88,8 @@ public class UsersController : ControllerBase
             user.Id,
             user.FullName,
             user.Email,
-            user.Role
+            user.Role,
+            user.DepartmentId
         });
     }
 
@@ -97,13 +99,18 @@ public class UsersController : ControllerBase
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var claims = new[]
-        {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.FullName),
-            new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Role, user.Role.ToString())
-        };
+       var claims = new List<Claim>
+{
+    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+    new Claim(ClaimTypes.Name, user.FullName),
+    new Claim(ClaimTypes.Email, user.Email),
+    new Claim(ClaimTypes.Role, user.Role.ToString())
+};
+
+if (user.DepartmentId.HasValue)
+{
+    claims.Add(new Claim("departmentId", user.DepartmentId.Value.ToString()));
+}
 
         var token = new JwtSecurityToken(
             issuer: jwtSettings["Issuer"],
