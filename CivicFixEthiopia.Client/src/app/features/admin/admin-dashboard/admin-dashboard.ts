@@ -1,6 +1,7 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth';
 import { ReportsService } from '../../../core/services/reports';
 import { HttpClient } from '@angular/common/http';
@@ -11,7 +12,7 @@ const DEPARTMENTS_URL = 'http://localhost:5075/api/departments';
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   styleUrl: './admin-dashboard.css',
   templateUrl: './admin-dashboard.html',
 })

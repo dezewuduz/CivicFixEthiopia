@@ -1,0 +1,240 @@
+<div class="manage-container">
+
+  <header class="manage-header">
+    <div>
+      <h1>Manage Officers</h1>
+      <p class="subtitle">Department officer accounts</p>
+    </div>
+
+    <a routerLink="/admin" class="back-link">
+      ← Back to Dashboard
+    </a>
+  </header>
+
+  @if (successMessage()) {
+    <div class="success-banner">
+      {{ successMessage() }}
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="error-banner">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (!showForm()) {
+    <button class="add-btn" (click)="openCreateForm()">
+      + Add Officer
+    </button>
+  }
+
+  @if (showForm()) {
+
+    <div class="form-card">
+
+      <h2>
+        {{ editingOfficerId === null
+          ? 'New Officer Account'
+          : 'Edit Officer Account'
+        }}
+      </h2>
+
+      <form (ngSubmit)="saveOfficer()" #officerForm="ngForm">
+
+        <label for="fullName">
+          Full Name *
+        </label>
+
+        <input
+          id="fullName"
+          name="fullName"
+          type="text"
+          [(ngModel)]="formFullName"
+          required
+        />
+
+        <label for="email">
+          Email *
+        </label>
+
+        <input
+          id="email"
+          name="email"
+          type="email"
+          [(ngModel)]="formEmail"
+          required
+        />
+
+        @if (editingOfficerId === null) {
+
+          <label for="password">
+            Password *
+          </label>
+
+          <input
+            id="password"
+            name="password"
+            type="password"
+            [(ngModel)]="formPassword"
+            required
+            minlength="6"
+          />
+
+        }
+
+        <label for="phoneNumber">
+          Phone Number
+        </label>
+
+        <input
+          id="phoneNumber"
+          name="phoneNumber"
+          type="tel"
+          [(ngModel)]="formPhoneNumber"
+        />
+
+        <label for="department">
+          Department *
+        </label>
+
+        <select
+          id="department"
+          name="department"
+          [(ngModel)]="formDepartmentId"
+          required
+        >
+
+          <option [ngValue]="null">
+            Select department
+          </option>
+
+          @for (dept of departments(); track dept.id) {
+
+            <option [ngValue]="dept.id">
+              {{ dept.name }}
+            </option>
+
+          }
+
+        </select>
+
+        <div class="form-actions">
+
+          <button
+            type="button"
+            class="cancel-btn"
+            (click)="cancelForm()"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            class="save-btn"
+            [disabled]="officerForm.invalid"
+          >
+            {{ editingOfficerId === null
+              ? 'Create Officer'
+              : 'Save Changes'
+            }}
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  }
+
+  @if (isLoading()) {
+
+    <p class="loading">
+      Loading officers...
+    </p>
+
+  } @else if (officers().length === 0) {
+
+    <p class="empty-state">
+      No officer accounts yet.
+    </p>
+
+  } @else {
+
+    <table>
+
+      <thead>
+
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Department</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+        @for (officer of officers(); track officer.id) {
+
+          <tr>
+
+            <td>
+              {{ officer.fullName }}
+            </td>
+
+            <td>
+              {{ officer.email }}
+            </td>
+
+            <td>
+              {{ officer.departmentName || '—' }}
+            </td>
+
+            <td>
+
+              <span
+                class="badge"
+                [class.inactive]="!officer.isActive"
+              >
+                {{ officer.isActive ? 'Active' : 'Inactive' }}
+              </span>
+
+            </td>
+
+            <td class="actions-cell">
+
+              <button
+                class="edit-btn"
+                (click)="openEditForm(officer)"
+              >
+                Edit
+              </button>
+
+              @if (officer.isActive) {
+
+                <button
+                  class="deactivate-btn"
+                  (click)="deactivateOfficer(officer)"
+                >
+                  Deactivate
+                </button>
+
+              }
+
+            </td>
+
+          </tr>
+
+        }
+
+      </tbody>
+
+    </table>
+
+  }
+
+</div>
